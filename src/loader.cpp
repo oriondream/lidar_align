@@ -1,4 +1,5 @@
 #include <geometry_msgs/TransformStamped.h>
+#include <tf2_msgs/TFMessage.h>
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
 
@@ -120,7 +121,7 @@ bool Loader::loadTformFromROSBag(const std::string& bag_path, Odom* odom) {
   }
 
   std::vector<std::string> types;
-  types.push_back(std::string("geometry_msgs/TransformStamped"));
+  types.push_back(std::string("tf2_msgs/TFMessage"));
   rosbag::View view(bag, rosbag::TypeQuery(types));
 
   size_t tform_num = 0;
@@ -128,19 +129,19 @@ bool Loader::loadTformFromROSBag(const std::string& bag_path, Odom* odom) {
     std::cout << " Loading transform: \e[1m" << tform_num++
               << "\e[0m from ros bag" << '\r' << std::flush;
 
-    geometry_msgs::TransformStamped transform_msg =
-        *(m.instantiate<geometry_msgs::TransformStamped>());
+    tf2_msgs::TFMessage transform_msg =
+        *(m.instantiate<tf2_msgs::TFMessage>());
 
-    Timestamp stamp = transform_msg.header.stamp.sec * 1000000ll +
-                      transform_msg.header.stamp.nsec / 1000ll;
+    Timestamp stamp = transform_msg.transforms[0].header.stamp.sec * 1000000ll +
+                      transform_msg.transforms[0].header.stamp.nsec / 1000ll;
 
-    Transform T(Transform::Translation(transform_msg.transform.translation.x,
-                                       transform_msg.transform.translation.y,
-                                       transform_msg.transform.translation.z),
-                Transform::Rotation(transform_msg.transform.rotation.w,
-                                    transform_msg.transform.rotation.x,
-                                    transform_msg.transform.rotation.y,
-                                    transform_msg.transform.rotation.z));
+    Transform T(Transform::Translation(transform_msg.transforms[0].transform.translation.x,
+                                       transform_msg.transforms[0].transform.translation.y,
+                                       transform_msg.transforms[0].transform.translation.z),
+                Transform::Rotation(transform_msg.transforms[0].transform.rotation.w,
+                                    transform_msg.transforms[0].transform.rotation.x,
+                                    transform_msg.transforms[0].transform.rotation.y,
+                                    transform_msg.transforms[0].transform.rotation.z));
     odom->addTransformData(stamp, T);
   }
 
